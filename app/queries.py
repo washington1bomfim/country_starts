@@ -35,7 +35,7 @@ def songs_by_top_artists(
         INNER JOIN top_artists ta ON ta.artist = p.artist
         WHERE p.played_at::date BETWEEN %s AND %s
         GROUP BY p.artist, p.song
-        ORDER BY p.artist ASC, plays DESC, p.song ASC
+        ORDER BY plays DESC, p.artist ASC, p.song ASC
         LIMIT %s;
     """
     return run_query(

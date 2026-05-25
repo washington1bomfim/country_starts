@@ -31,86 +31,111 @@ function renderTable(containerId, columns, rows) {
 let topArtistsChart = null;
 let songsByArtistsChart = null;
 
-function renderPieChart(canvasId, data, chartInstance) {
+function buildPalette(size) {
+  const base = [
+    "rgba(99, 102, 241, 0.85)",
+    "rgba(168, 85, 247, 0.85)",
+    "rgba(236, 72, 153, 0.85)",
+    "rgba(239, 68, 68, 0.85)",
+    "rgba(245, 158, 11, 0.85)",
+    "rgba(34, 197, 94, 0.85)",
+    "rgba(59, 130, 246, 0.85)",
+    "rgba(14, 165, 233, 0.85)",
+    "rgba(6, 182, 212, 0.85)",
+    "rgba(16, 185, 129, 0.85)",
+  ];
+
+  const colors = [...base];
+  if (size > base.length) {
+    for (let i = base.length; i < size; i++) {
+      colors.push(`hsla(${(i * 31) % 360}, 70%, 58%, 0.85)`);
+    }
+  }
+  return colors.slice(0, size);
+}
+
+function renderTopArtistsBarChart(canvasId, data) {
   const ctx = document.getElementById(canvasId);
   if (!ctx || !data || data.length === 0) {
     return;
   }
 
-  const colors = [
-    "rgba(99, 102, 241, 0.8)",
-    "rgba(168, 85, 247, 0.8)",
-    "rgba(236, 72, 153, 0.8)",
-    "rgba(239, 68, 68, 0.8)",
-    "rgba(245, 158, 11, 0.8)",
-    "rgba(34, 197, 94, 0.8)",
-    "rgba(59, 130, 246, 0.8)",
-    "rgba(14, 165, 233, 0.8)",
-    "rgba(6, 182, 212, 0.8)",
-    "rgba(34, 197, 94, 0.8)",
-  ];
-
-  // Para gráfico de músicas, usar mais cores
-  if (data.length > 10) {
-    for (let i = 10; i < data.length; i++) {
-      colors.push(`hsla(${(i * 36) % 360}, 70%, 60%, 0.8)`);
-    }
+  const parent = ctx.parentElement;
+  if (parent) {
+    const dynamicHeight = Math.max(320, Math.min(760, data.length * 42));
+    parent.style.height = `${dynamicHeight}px`;
   }
 
-  const labels = data.map((item) => item.artist || item.song || "");
+  const colors = buildPalette(data.length);
+
+  const labels = data.map((item) => item.artist || "");
   const values = data.map((item) => item.plays);
 
-  if (chartInstance === "topArtists" && topArtistsChart) {
+  if (topArtistsChart) {
     topArtistsChart.destroy();
-  } else if (chartInstance === "songsByArtists" && songsByArtistsChart) {
-    songsByArtistsChart.destroy();
   }
 
-  const chart = new Chart(ctx, {
-    type: "doughnut",
+  topArtistsChart = new Chart(ctx, {
+    type: "bar",
     data: {
-      labels: labels,
+      labels,
       datasets: [
         {
+          label: "Execucoes",
           data: values,
-          backgroundColor: colors.slice(0, data.length),
+          backgroundColor: colors,
           borderColor: "#1f2937",
-          borderWidth: 2,
+          borderWidth: 1,
+          borderRadius: 8,
+          maxBarThickness: 34,
         },
       ],
     },
     options: {
+      indexAxis: "y",
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: {
+            color: "rgba(229, 231, 235, 0.12)",
+          },
+          ticks: {
+            color: "#e5e7eb",
+            callback: (value) => formatNumber(value),
+          },
+        },
+        y: {
+          grid: {
+            color: "rgba(229, 231, 235, 0.08)",
+          },
+          ticks: {
+            color: "#e5e7eb",
+            autoSkip: false,
+            font: { family: "'Space Grotesk', sans-serif", size: 12 },
+          },
+        },
+      },
       plugins: {
         datalabels: {
           color: "#f3f4f6",
+          anchor: "end",
+          align: "right",
+          clamp: true,
           font: {
             family: "'Space Grotesk', sans-serif",
             weight: "bold",
-            size: 13,
+            size: 12,
           },
           formatter: (value) => formatNumber(value),
-          anchor: "center",
-          align: "center",
         },
         legend: {
-          position: "right",
-          labels: {
-            font: { family: "'Space Grotesk', sans-serif", size: 14 },
-            color: "#e5e7eb",
-            padding: 20,
-          },
+          display: false,
         },
         tooltip: {
           callbacks: {
-            label: function (context) {
-              const label = context.label || "";
-              const value = formatNumber(context.parsed);
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((context.parsed / total) * 100).toFixed(1);
-              return `${label}: ${value} (${percentage}%)`;
-            },
+            label: (context) => `Execucoes: ${formatNumber(context.parsed.x)}`,
           },
           backgroundColor: "rgba(31, 41, 55, 0.9)",
           titleFont: { family: "'Space Grotesk', sans-serif" },
@@ -123,12 +148,101 @@ function renderPieChart(canvasId, data, chartInstance) {
       },
     },
   });
+}
 
-  if (chartInstance === "topArtists") {
-    topArtistsChart = chart;
-  } else if (chartInstance === "songsByArtists") {
-    songsByArtistsChart = chart;
+function renderSongsBarChart(canvasId, data) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx || !data || data.length === 0) {
+    return;
   }
+
+  const parent = ctx.parentElement;
+  if (parent) {
+    const dynamicHeight = Math.max(360, Math.min(900, data.length * 38));
+    parent.style.height = `${dynamicHeight}px`;
+  }
+
+  const labels = data.map((item) => `${item.song} - ${item.artist}`);
+  const values = data.map((item) => item.plays);
+  const colors = buildPalette(data.length);
+
+  if (songsByArtistsChart) {
+    songsByArtistsChart.destroy();
+  }
+
+  songsByArtistsChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Execucoes",
+          data: values,
+          backgroundColor: colors,
+          borderColor: "#1f2937",
+          borderWidth: 1,
+          borderRadius: 8,
+          maxBarThickness: 36,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: {
+            color: "rgba(229, 231, 235, 0.12)",
+          },
+          ticks: {
+            color: "#e5e7eb",
+            callback: (value) => formatNumber(value),
+          },
+        },
+        y: {
+          grid: {
+            color: "rgba(229, 231, 235, 0.08)",
+          },
+          ticks: {
+            color: "#e5e7eb",
+            autoSkip: false,
+            font: { family: "'Space Grotesk', sans-serif", size: 12 },
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        datalabels: {
+          color: "#f3f4f6",
+          anchor: "end",
+          align: "right",
+          clamp: true,
+          formatter: (value) => formatNumber(value),
+          font: {
+            family: "'Space Grotesk', sans-serif",
+            weight: "bold",
+            size: 12,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => `Execucoes: ${formatNumber(context.parsed.x)}`,
+          },
+          backgroundColor: "rgba(31, 41, 55, 0.9)",
+          titleFont: { family: "'Space Grotesk', sans-serif" },
+          bodyFont: { family: "'Space Grotesk', sans-serif" },
+          titleColor: "#f3f4f6",
+          bodyColor: "#e5e7eb",
+          borderColor: "#4b5563",
+          borderWidth: 1,
+        },
+      },
+    },
+  });
 }
 
 
@@ -151,15 +265,7 @@ async function loadTopArtists() {
   const limit = document.getElementById("topArtistsLimit").value;
   const url = `/api/stats/top-artists?start_date=${startDate}&end_date=${endDate}&limit=${limit}`;
   const data = await fetchJson(url);
-  renderPieChart("topArtistsChart", data, "topArtists");
-  renderTable(
-    "topArtistsResults",
-    [
-      { key: "artist", label: "Artista" },
-      { key: "plays", label: "Execucoes", formatter: formatNumber },
-    ],
-    data
-  );
+  renderTopArtistsBarChart("topArtistsChart", data);
 }
 
 async function loadSongsByTopArtists() {
@@ -169,16 +275,7 @@ async function loadSongsByTopArtists() {
   const url = `/api/stats/top-songs-by-top-artists?start_date=${startDate}&end_date=${endDate}&artist_limit=${artistLimit}&song_limit=${songLimit}`;
   const data = await fetchJson(url);
 
-  renderPieChart("songsByArtistsChart", data, "songsByArtists");
-  renderTable(
-    "songsByArtistsResults",
-    [
-      { key: "artist", label: "Artista" },
-      { key: "song", label: "Musica" },
-      { key: "plays", label: "Execucoes", formatter: formatNumber },
-    ],
-    data
-  );
+  renderSongsBarChart("songsByArtistsChart", data);
 }
 
 async function loadTopArtistOnDate() {
@@ -212,23 +309,6 @@ async function loadTopSongOnDate() {
   );
 }
 
-async function loadArtistOnDate() {
-  const artist = document.getElementById("artistName").value;
-  const refDate = document.getElementById("artistDate").value;
-  const data = await fetchJson(`/api/stats/artist-on-date?artist=${encodeURIComponent(artist)}&ref_date=${refDate}`);
-
-  document.getElementById("artistTotal").textContent = `${data.artist} teve ${formatNumber(data.plays)} execucoes em ${data.date}.`;
-
-  renderTable(
-    "artistSongsResults",
-    [
-      { key: "song", label: "Musica" },
-      { key: "plays", label: "Execucoes", formatter: formatNumber },
-    ],
-    data.top_songs
-  );
-}
-
 async function runIngestion() {
   const status = document.getElementById("ingestionStatus");
   status.textContent = "Executando ingestao de ontem...";
@@ -250,7 +330,6 @@ async function initDashboard() {
   document.getElementById("startDate").value = startDate;
   document.getElementById("endDate").value = endDate;
   document.getElementById("singleDate").value = endDate;
-  document.getElementById("artistDate").value = endDate;
 
   await Promise.all([loadTopArtists(), loadSongsByTopArtists(), loadTopArtistOnDate(), loadTopSongOnDate()]);
 }
@@ -261,10 +340,9 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loadDateStats").addEventListener("click", async () => {
     await Promise.all([loadTopArtistOnDate(), loadTopSongOnDate()]);
   });
-  document.getElementById("loadArtistDate").addEventListener("click", loadArtistOnDate);
   document.getElementById("runIngestion").addEventListener("click", runIngestion);
 
   initDashboard().catch(() => {
-    document.getElementById("topArtistsResults").innerHTML = '<div class="empty">Erro ao carregar dados iniciais.</div>';
+    document.getElementById("ingestionStatus").textContent = "Erro ao carregar dados iniciais.";
   });
 });
