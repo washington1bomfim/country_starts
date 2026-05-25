@@ -6,25 +6,31 @@
   <title>country_starts | Radio Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <div class="bg-orb orb-left"></div>
-  <div class="bg-orb orb-right"></div>
-
   <main class="layout">
     <header class="hero">
-      <p class="eyebrow">Country Radio Analytics</p>
-      <h1>country starts</h1>
-      <button id="runIngestion" class="cta">Rodar ingestão de ontem</button>
+      <div class="hero-topline">
+        <p class="eyebrow">Country Radio Intelligence</p>
+        <span class="station-badge">LIVE INSIGHTS</span>
+      </div>
+      <h1>Country Starts Dashboard</h1>
+      <p class="hero-subtitle">Panorama diário das rádios country com leitura rápida de artistas e músicas que realmente dominam a programação.</p>
+      <div class="hero-actions">
+        <button id="runIngestion" class="cta">Atualizar dados de ontem</button>
+      </div>
       <p id="ingestionStatus" class="status"></p>
     </header>
 
-    <section class="panel">
-      <h2>Intervalo de análise</h2>
+    <section class="panel panel-focus">
+      <div class="panel-heading">
+        <h2>Top Artistas no Período</h2>
+        <p>Participação por número de execuções</p>
+      </div>
       <div class="controls grid-3">
         <label>
           Data inicial
@@ -47,8 +53,11 @@
       </div>
     </section>
 
-    <section class="panel">
-      <h2>Músicas dos artistas mais tocados</h2>
+    <section class="panel panel-focus">
+      <div class="panel-heading">
+        <h2>Top Músicas dos Artistas em Alta</h2>
+        <p>Ranking por execuções com destaque para faixa e intérprete</p>
+      </div>
       <div class="controls grid-3">
         <label>
           Limite de artistas
@@ -66,7 +75,10 @@
     </section>
 
     <section class="panel">
-      <h2>Quem mais tocou na data</h2>
+      <div class="panel-heading">
+        <h2>Snapshot da Data</h2>
+        <p>Quem liderou o dia na programação</p>
+      </div>
       <div class="controls grid-3">
         <label>
           Data
